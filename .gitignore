@@ -1,0 +1,51 @@
+# Node / package
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+.pnp.*
+# Builds / output
+dist/
+dist-ssr/
+build/
+out/
+# Environment / secrets
+.env
+.env.*local
+# Logs
+logs/
+*.log
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+# Common large binaries and archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.iso
+*.dmg
+*.exe
+*.dll
+*.so
+*.dylib
+*.bin
+*.pkg
+# Media large files
+*.mp4
+*.mov
+*.avi
+*.mkv
+# Prevent accidental commit of node binary inside node_modules
+/node_modules/**/node
+/node_modules/**/node.exe
+# Design files (often large)
+*.psd
+*.ai
+*.sketch

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="navbar"></div>
+
+<script>
+  fetch('navbar.html')
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('navbar').innerHTML = data;
+    });
+</script>
+
+<main class="settings-container">
+  <h1>Settings</h1>
+  
+  <div class="settings-card">
+    <h2>User Preferences</h2>
+    <p class="text-muted mb-3">Configure your application settings and preferences.</p>
+    
+    <div class="settings-grid">
+      <div class="form-group">
+        <label class="form-label">Theme</label>
+        <select class="form-control" id="themeSelect">
+          <option>Light</option>
+          <option>Dark</option>
+          <option>Auto</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Notifications</label>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+          <input type="checkbox" id="notifications" checked>
+          <label for="notifications" class="text-muted">Enable email notifications</label>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Language</label>
+        <select class="form-control" id="languageSelect">
+          <option>English</option>
+          <option>French</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Auto-refresh Dashboard</label>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+          <input type="checkbox" id="autoRefresh" checked>
+          <label for="autoRefresh" class="text-muted">Refresh data every 30 seconds</label>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Items per page</label>
+        <select class="form-control" id="itemsPerPage">
+          <option value="10">10</option>
+          <option value="25" selected>25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+    </div>
+    
+    <button class="btn btn-primary" onclick="saveSettings()" style="margin-top: 20px;">
+      <i class="fas fa-save"></i> Save Settings
+    </button>
+  </div>
+  
+  <div class="settings-card">
+    <h2>Data Management</h2>
+    <p class="text-muted mb-3">Manage your data and system preferences.</p>
+    
+    <div class="settings-grid">
+      <div class="form-group">
+        <label class="form-label">Export Data</label>
+        <p class="text-muted mb-2">Download all your data in CSV format</p>
+        <button class="btn btn-secondary" onclick="exportAllData()">
+          <i class="fas fa-download"></i> Export All Data
+        </button>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Clear Cache</label>
+        <p class="text-muted mb-2">Clear browser cache and refresh data</p>
+        <button class="btn btn-secondary" onclick="clearCache()">
+          <i class="fas fa-trash"></i> Clear Cache
+        </button>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Database Backup</label>
+        <p class="text-muted mb-2">Create a backup of all system data</p>
+        <button class="btn btn-warning" onclick="createBackup()">
+          <i class="fas fa-database"></i> Create Backup
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="settings-card">
+    <h2>System Information</h2>
+    <p class="text-muted mb-3">View system status and information.</p>
+    
+    <div class="settings-grid">
+      <div class="form-group">
+        <label class="form-label">Version</label>
+        <p class="text-muted">Virmatics Dashboard v2.1.0</p>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Last Updated</label>
+        <p class="text-muted" id="lastUpdated">Loading...</p>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Database Status</label>
+        <p class="text-muted" id="dbStatus">
+          <i class="fas fa-spinner fa-spin"></i> Checking...
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+    checkSystemStatus();
+  });
+  
+  function loadSettings() {
+    // Load settings from localStorage
+    const settings = JSON.parse(localStorage.getItem('virmaticsSettings') || '{}');
+    
+    if (settings.theme) document.getElementById('themeSelect').value = settings.theme;
+    if (settings.language) document.getElementById('languageSelect').value = settings.language;
+    if (settings.itemsPerPage) document.getElementById('itemsPerPage').value = settings.itemsPerPage;
+    
+    document.getElementById('notifications').checked = settings.notifications !== false;
+    document.getElementById('autoRefresh').checked = settings.autoRefresh !== false;
+  }
+  
+  function saveSettings() {
+    const settings = {
+      theme: document.getElementById('themeSelect').value,
+      language: document.getElementById('languageSelect').value,
+      itemsPerPage: document.getElementById('itemsPerPage').value,
+      notifications: document.getElementById('notifications').checked,
+      autoRefresh: document.getElementById('autoRefresh').checked
+    };
+    
+    localStorage.setItem('virmaticsSettings', JSON.stringify(settings));
+    showNotification('Settings saved successfully', 'success');
+    
+    // Apply theme if changed
+    applyTheme(settings.theme);
+  }
+  
+  function applyTheme(theme) {
+    if (theme === 'Dark') {
+      document.body.classList.add('dark-theme');
+    } else {
+      document.body.classList.remove('dark-theme');
+    }
+  }
+  
+  function exportAllData() {
+    showNotification('Preparing data export...', 'info');
+    
+    // Simulate export process
+    setTimeout(() => {
+      const data = {
+        exportDate: new Date().toISOString(),
+        version: '2.1.0',
+        note: 'This is a simulated export. In a real application, this would contain all your data.'
+      };
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `virmatics_export_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      showNotification('Data exported successfully', 'success');
+    }, 2000);
+  }
+  
+  function clearCache() {
+    localStorage.removeItem('virmaticsCache');
+    sessionStorage.clear();
+    showNotification('Cache cleared successfully', 'success');
+  }
+  
+  function createBackup() {
+    showNotification('Creating backup...', 'info');
+    
+    // Simulate backup process
+    setTimeout(() => {
+      showNotification('Backup created successfully', 'success');
+    }, 3000);
+  }
+  
+  async function checkSystemStatus() {
+    try {
+      const response = await fetch('/api/dashboard');
+      if (response.ok) {
+        document.getElementById('dbStatus').innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> Connected';
+      } else {
+        throw new Error('Database connection failed');
+      }
+    } catch (err) {
+      document.getElementById('dbStatus').innerHTML = '<i class="fas fa-exclamation-circle" style="color: #ef4444;"></i> Disconnected';
+    }
+    
+    document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+  }
+  
+  function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+      <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+      <span>${message}</span>
+      <button class="notification-close">&times;</button>
+    `;
+    
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 400px;
+      animation: slideIn 0.3s ease;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => notification.remove(), 300);
+    }, 5000);
+    
+    notification.querySelector('.notification-close').onclick = () => {
+      notification.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => notification.remove(), 300);
+    };
+  }
+  
+  // Add CSS animations
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
+    .notification-close {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0;
+      margin-left: 8px;
+    }
+  `;
+  document.head.appendChild(style);
+</script>
+</body>
+</html>

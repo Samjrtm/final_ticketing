@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeline</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div id="navbar"></div>
+
+  <script>
+    fetch('navbar.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('navbar').innerHTML = data;
+      });
+  </script>
+
+  <main class="timeline-container">
+    <h1>Activity Timeline</h1>
+    
+    <div class="timeline-card">
+      <div class="timeline" id="timeline">
+        <div class="loading">
+          <div class="spinner"></div>
+          Loading timeline data...
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTimelineData();
+    });
+    
+    async function loadTimelineData() {
+      const timeline = document.getElementById('timeline');
+      
+      try {
+        const [dashboardRes, ticketsRes] = await Promise.all([
+          fetch('/api/dashboard'),
+          fetch('/api/tickets')
+        ]);
+        
+        if (!dashboardRes.ok || !ticketsRes.ok) {
+          throw new Error('Failed to load data');
+        }
+        
+        const dashboardData = await dashboardRes.json();
+        const ticketsData = await ticketsRes.json();
+        
+        const activities = [];
+        
+        Object.entries(dashboardData).forEach(([section, items]) => {
+          items.forEach(item => {
+            activities.push({
+              date: new Date(item.date || item.createdAt),
+              type: section,
+              title: getActivityTitle(section, item),
+              description: getActivityDescription(section, item),
+              icon: getActivityIcon(section),
+              priority: getActivityPriority(section, item)
+            });
+          });
+        });
+        
+        ticketsData.forEach(ticket => {
+          activities.push({
+            date: new Date(ticket.createdAt),
+            type: 'ticket',
+            title: `Ticket ${ticket.status}: ${ticket.title}`,
+            description: `${ticket.priority} priority ticket assigned to ${ticket.assignedTo || 'Unassigned'}`,
+            icon: 'fas fa-ticket-alt',
+            priority: ticket.priority?.toLowerCase() || 'low'
+          });
+        });
+        
+        activities.sort((a, b) => b.date - a.date);
+        renderTimeline(activities);
+        
+      } catch (err) {
+        console.error('Error loading timeline:', err);
+        timeline.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #ef4444;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px;"></i>
+            <h3>Failed to load timeline</h3>
+            <p>Please try refreshing the page.</p>
+          </div>
+        `;
+      }
+    }
+    
+    function renderTimeline(activities) {
+      const timeline = document.getElementById('timeline');
+      
+      if (activities.length === 0) {
+        timeline.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #6b7280;">
+            <i class="fas fa-clock" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+            <h3>No activities found</h3>
+            <p>Activities will appear here as you use the system.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      timeline.innerHTML = activities.map(activity => `
+        <div class="timeline-item">
+          <div class="timeline-dot ${activity.priority}"></div>
+          <div class="timeline-content">
+            <div class="timeline-date">${formatTimelineDate(activity.date)}</div>
+            <div class="timeline-title">
+              <i class="${activity.icon}"></i> ${activity.title}
+            </div>
+            <div class="timeline-description">${activity.description}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function getActivityTitle(section, item) {
+      const titles = {
+        removals: `Vehicle removal scheduled`,
+        interventions: `Intervention planned`,
+        installations: `New installation scheduled`,
+        remarks: `${item.severity || 'Low'} severity incident reported`
+      };
+      return titles[section] || 'Activity recorded';
+    }
+    
+    function getActivityDescription(section, item) {
+      const company = item.company || 'Unknown Company';
+      const reg = item.reg || 'Unknown Vehicle';
+      
+      const descriptions = {
+        removals: `Vehicle ${reg} removal scheduled at ${company}`,
+        interventions: `Maintenance intervention for vehicle ${reg} at ${company}`,
+        installations: `New installation for vehicle ${reg} at ${company}`,
+        remarks: `${item.type || 'Incident'} reported for vehicle ${reg} at ${company}`
+      };
+      return descriptions[section] || `Activity for ${company}`;
+    }
+    
+    function getActivityIcon(section) {
+      const icons = {
+        removals: 'fas fa-minus-circle',
+        interventions: 'fas fa-wrench',
+        installations: 'fas fa-plus-circle',
+        remarks: 'fas fa-exclamation-triangle'
+      };
+      return icons[section] || 'fas fa-circle';
+    }
+    
+    function getActivityPriority(section, item) {
+      if (section === 'remarks') {
+        const severity = (item.severity || '').toLowerCase();
+        if (severity === 'high' || severity === 'critical') return 'danger';
+        if (severity === 'medium') return 'warning';
+        return 'success';
+      }
+      
+      const status = (item.status || '').toLowerCase();
+      if (status === 'completed') return 'success';
+      if (status === 'in progress') return 'warning';
+      return 'primary';
+    }
+    
+    function formatTimelineDate(date) {
+      const now = new Date();
+      const diffTime = now - date;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) {
+        return `Today, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+      } else if (diffDays === 1) {
+        return `Yesterday, ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+      } else if (diffDays < 7) {
+        return `${diffDays} days ago`;
+      } else {
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+    }
+  </script>
+
+</body>
+</html>

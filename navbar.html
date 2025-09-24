@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+
+</head>
+
+
+<body>
+  <header class="site-header" style="background-color: #0f172a; padding: 10px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+    <div class="site-header-content">
+      <!-- Logo -->
+      <div id="logo">
+        <img src="logo2.png" alt="Virmatics Logo">
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-bar">
+        <input type="text" placeholder="Search across all data..." id="globalSearch">
+        <button type="button" onclick="performGlobalSearch()">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Icons -->
+      <nav class="site-navigation">
+        <ul class="nav">
+          <li>
+            <a href="dashboard.html" title="Dashboard" data-page="dashboard">
+              <i class="fas fa-home"></i>
+            </a>
+          </li>
+          <li>
+            <a href="tickets.html" title="Tickets" data-page="tickets">
+              <i class="fas fa-ticket-alt"></i>
+            </a>
+          </li>
+          <li>
+            <a href="timeline.html" title="Timeline" data-page="timeline">
+              <i class="fas fa-stream"></i>
+            </a>
+          </li>
+          <li>
+            <a href="settings.html" title="Settings" data-page="settings">
+              <i class="fas fa-cog"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <script>
+    // Set active navigation item based on current page
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentPage = window.location.pathname.split('/').pop().replace('.html', '') || 'dashboard';
+      const navLinks = document.querySelectorAll('.nav a[data-page]');
+      
+      navLinks.forEach(link => {
+        if (link.dataset.page === currentPage) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+    });
+    
+    // Global search functionality
+    function performGlobalSearch() {
+      const query = document.getElementById('globalSearch').value.trim();
+      if (!query) return;
+      
+      // If we're on dashboard, search all tables
+      if (window.location.pathname.includes('dashboard')) {
+        const searchInputs = document.querySelectorAll('.search-input');
+        searchInputs.forEach(input => {
+          input.value = query;
+          input.dispatchEvent(new Event('keyup'));
+        });
+      } else {
+        // Redirect to dashboard with search query
+        window.location.href = `dashboard.html?search=${encodeURIComponent(query)}`;
+      }
+    }
+    
+    // Handle Enter key in global search
+    document.addEventListener('DOMContentLoaded', function() {
+      const globalSearch = document.getElementById('globalSearch');
+      if (globalSearch) {
+        globalSearch.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            performGlobalSearch();
+          }
+        });
+      }
+    });
+  </script>
+
+  <!-- Footer (mirrors navbar appearance) -->
+  <footer class="footer">
+    <div class="footer-content">
+      Copyright © Virmatics Ltd 2025
+    </div>
+  </footer>
+</body>
+</html>

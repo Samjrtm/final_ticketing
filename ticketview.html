@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ticket View | Virmatics Support</title>
+
+  <!-- Font Awesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <!-- Navbar -->
+  <div id="navbar"></div>
+  <script>
+    fetch('navbar.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('navbar').innerHTML = data;
+      });
+  </script>
+
+  <!-- Create Ticket Modal -overlay-->
+  <div class="modal" id="ticketModal"> 
+    <div class="ticket-modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Create New Support Ticket</h3>
+        <button class="close-modal" id="closeModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="ticketForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="subject">Subject *</label>
+              <input type="text" class="form-control" id="subject" name="subject" placeholder="Brief description of the issue" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="priority">Priority *</label>
+              <select class="form-control" id="priority" name="priority" required>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high" selected>High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="requester">Requester *</label>
+              <select class="form-control" id="requester" name="requester" required>
+                <option value="">Select Requester</option>
+                <option value="anushree">Anushree Soondrum</option>
+                <option value="ashia">Ashia Choony</option>
+                <option value="avotra">Avotra Andriatsilavina</option>
+                <option value="eshan">Eshan Chitamun</option>
+                <option value="samuel">Samuel Timothy</option>
+                <option value="lovikesh">Lovikesh Seewoogolam</option>
+                <option value="mansoor">Mansoor Ahmad Bhugeloo</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="assignedTo">Assigned To *</label>
+              <select class="form-control" id="assignedTo" name="assignedTo" required>
+                <option value="">Select assignee</option>
+                <option value="anushree">Anushree Soondrum</option>
+                <option value="ashia">Ashia Choony</option>
+                <option value="avotra">Avotra Andriatsilavina</option>
+                <option value="eshan">Eshan Chitamun</option>
+                <option value="samuel">Samuel Timothy</option>
+                <option value="lovikesh">Lovikesh Seewoogolam</option>
+                <option value="mansoor">Mansoor Ahmad Bhugeloo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="status">Status *</label>
+              <select class="form-control" id="status" name="status" required>
+                <option value="open" selected>Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="pending">On Hold</option>
+                <option value="completed">Completed</option>
+                <option value="overdue">Overdue</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="category">Category *</label>
+              <select class="form-control" id="category" name="category" required>
+                <option value="">Select category</option>
+                <option value="development" selected>Development</option>
+                <option value="admin">Administrative</option>
+                <option value="interventions">Interventions</option>
+                <option value="others">Others</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="dueDate">Due Date</label>
+              <input type="date" class="form-control" id="dueDate" name="dueDate">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="description">Description *</label>
+            <textarea class="form-control" id="description" name="description" placeholder="Please provide detailed information about the issue..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="attachments">Attachments</label>
+            <input type="file" class="form-control" id="attachments" name="attachments" multiple>
+            <small class="text-muted">Maximum file size: 10MB. Allowed types: .pdf, .doc, .xls, .jpg, .png</small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <!-- Ensure these buttons do not act as implicit form submits -->
+        <button type="button" class="btn btn-secondary" id="cancelTicket">Cancel</button>
+        <button type="button" class="btn btn-primary" id="submitTicket">Create Ticket</button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Check if we're editing an existing ticket
+    const urlParams = new URLSearchParams(window.location.search);
+    const ticketId = urlParams.get('id');
+    const isEdit = urlParams.get('edit') === 'true';
+    
+    const modal = document.getElementById('ticketModal');
+    const createBtn = document.getElementById('createTicketBtn');
+    const closeBtn = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelTicket');
+    const submitBtn = document.getElementById('submitTicket');
+    const form = document.getElementById('ticketForm');
+
+    // Show modal on page load
+    if (modal) {
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      
+      // Update modal title if editing
+      if (isEdit && ticketId) {
+        document.querySelector('.modal-title').textContent = 'Edit Support Ticket';
+        document.getElementById('submitTicket').textContent = 'Update Ticket';
+        loadTicketData(ticketId);
+      }
+    }
+
+    function openModal() {
+      if (!modal) return;
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      if (!modal) return;
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+      // Redirect back to tickets page
+      window.location.href = 'tickets.html';
+    }
+
+    async function loadTicketData(ticketId) {
+      try {
+        const res = await fetch(`/api/tickets`);
+        if (!res.ok) throw new Error('Failed to load ticket');
+        
+        const tickets = await res.json();
+        const ticket = tickets.find(t => t.id === ticketId);
+        
+        if (ticket) {
+          document.getElementById('subject').value = ticket.title || '';
+          document.getElementById('description').value = ticket.description || '';
+          document.getElementById('priority').value = ticket.priority?.toLowerCase() || 'low';
+          document.getElementById('status').value = ticket.status?.toLowerCase().replace(/\s+/g, '_') || 'open';
+          document.getElementById('requester').value = ticket.createdBy?.toLowerCase().replace(/\s+/g, '') || '';
+          document.getElementById('assignedTo').value = ticket.assignedTo?.toLowerCase().replace(/\s+/g, '') || '';
+          
+          if (ticket.dueDate) {
+            const dueDate = new Date(ticket.dueDate);
+            document.getElementById('dueDate').value = dueDate.toISOString().slice(0, 10);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading ticket:', err);
+        showNotification('Failed to load ticket data', 'error');
+      }
+    }
+    if (createBtn) createBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+    if (submitBtn) {
+      submitBtn.addEventListener('click', async () => {
+        if (!form) return;
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
+
+        const subject = document.getElementById('subject').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const priority = document.getElementById('priority').value;
+        const status = document.getElementById('status').value;
+        const dueDate = document.getElementById('dueDate').value;
+        const requesterSelect = document.getElementById('requester');
+        const assignedSelect = document.getElementById('assignedTo');
+
+        const requesterValue = requesterSelect ? requesterSelect.value : '';
+        const assignedToValue = assignedSelect ? assignedSelect.value : '';
+
+        const payload = {
+          title: subject,
+          description,
+          status: status,
+          priority: priority,
+          requester: requesterValue,
+          assignedTo: assignedToValue,
+          dueDate: dueDate || null
+        };
+
+        console.log('Submitting ticket payload:', payload);
+
+        try {
+          const url = isEdit && ticketId ? `/api/tickets/${ticketId}` : '/api/tickets';
+          const method = isEdit && ticketId ? 'PUT' : 'POST';
+          
+          const res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          console.log('Server response status:', res.status);
+          
+          if (!res.ok) throw new Error(`Failed to ${isEdit ? 'update' : 'create'} ticket`);
+
+          const result = await res.json();
+          console.log('Server response:', result);
+          
+          form.reset();
+          showNotification(`Ticket ${isEdit ? 'updated' : 'created'} successfully`, 'success');
+          
+          // Wait a moment before redirecting to ensure the ticket is saved
+          setTimeout(() => {
+            window.location.href = 'tickets.html';
+          }, 2000);
+          
+        } catch (err) {
+          console.error('Error creating/updating ticket:', err);
+          showNotification(`Error ${isEdit ? 'updating' : 'creating'} ticket`, 'error');
+        }
+      });
+    }
+
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+    
+    // Notification function
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `notification notification-${type}`;
+      notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+        <button class="notification-close">&times;</button>
+      `;
+      
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        max-width: 400px;
+        animation: slideIn 0.3s ease;
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+      }, 5000);
+      
+      notification.querySelector('.notification-close').onclick = () => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+      };
+    }
+  });
+</script>
+
+  <!-- Footer (mirrors navbar appearance) -->
+  <footer class="footer">
+    <div class="footer-content">
+      Copyright © Virmatics Ltd 2025
+    </div>
+  </footer>
+</body>
+</html>

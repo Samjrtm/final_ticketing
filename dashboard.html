@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="navbar"></div>
+
+<script>
+  fetch('navbar.html')
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('navbar').innerHTML = data;
+    });
+</script>
+
+  <!-- Dashboard -->
+  <main class="dashboard">
+    <h1>Dashboard</h1>
+
+    <!-- Removals -->
+    <section data-section="removals">
+      <h2>Removals</h2>
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="sortable searchable" data-section="removals">
+            <thead>
+              <tr>
+                <th class="sortable">Company Name</th>
+                <th class="sortable">Vehicle Registration</th>
+                <th class="sortable">Date</th>
+                <th class="sortable">Location</th>
+                <th class="sortable">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="loading">
+                <td colspan="5">
+                  <div class="spinner"></div>
+                  Loading data...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-controls">
+          <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search removals..." data-section="removals">
+          </div>
+          <div class="button-group">
+            <button class="btn btn-secondary" onclick="exportData('removals')">
+              <i class="fas fa-download"></i> Export
+            </button>
+            <button class="btn btn-danger" onclick="deleteSelected('removals')">
+              <i class="fas fa-trash"></i> Delete Selected
+            </button>
+            <button class="btn btn-primary" data-section="removals">
+              <i class="fas fa-plus"></i> Add New
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interventions -->
+    <section data-section="interventions">
+      <h2>Interventions</h2>
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="sortable searchable" data-section="interventions">
+            <thead>
+              <tr>
+                <th class="sortable">Company Name</th>
+                <th class="sortable">Vehicle Registration</th>
+                <th class="sortable">Date</th>
+                <th class="sortable">Location</th>
+                <th class="sortable">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="loading">
+                <td colspan="5">
+                  <div class="spinner"></div>
+                  Loading data...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-controls">
+          <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search interventions..." data-section="interventions">
+          </div>
+          <div class="button-group">
+            <button class="btn btn-secondary" onclick="exportData('interventions')">
+              <i class="fas fa-download"></i> Export
+            </button>
+            <button class="btn btn-danger" onclick="deleteSelected('interventions')">
+              <i class="fas fa-trash"></i> Delete Selected
+            </button>
+            <button class="btn btn-primary" data-section="interventions">
+              <i class="fas fa-plus"></i> Add New
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- New Installations -->
+    <section data-section="installations">
+      <h2>New Installations</h2>
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="sortable searchable" data-section="installations">
+            <thead>
+              <tr>
+                <th class="sortable">Company Name</th>
+                <th class="sortable">Vehicle Registration</th>
+                <th class="sortable">Date</th>
+                <th class="sortable">Location</th>
+                <th class="sortable">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="loading">
+                <td colspan="5">
+                  <div class="spinner"></div>
+                  Loading data...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-controls">
+          <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search installations..." data-section="installations">
+          </div>
+          <div class="button-group">
+            <button class="btn btn-secondary" onclick="exportData('installations')">
+              <i class="fas fa-download"></i> Export
+            </button>
+            <button class="btn btn-danger" onclick="deleteSelected('installations')">
+              <i class="fas fa-trash"></i> Delete Selected
+            </button>
+            <button class="btn btn-primary" data-section="installations">
+              <i class="fas fa-plus"></i> Add New
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Remarks -->
+    <section data-section="remarks">
+      <h2>Remarks (Incident Reports)</h2>
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="sortable searchable" data-section="remarks">
+            <thead>
+              <tr>
+                <th class="sortable">Company Name</th>
+                <th class="sortable">Vehicle Registration</th>
+                <th class="sortable">Date</th>
+                <th class="sortable">Incident Type</th>
+                <th class="sortable">Severity</th>
+                <th class="sortable">Resolution Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="loading">
+                <td colspan="6">
+                  <div class="spinner"></div>
+                  Loading data...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-controls">
+          <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search remarks..." data-section="remarks">
+          </div>
+          <div class="button-group">
+            <button class="btn btn-secondary" onclick="exportData('remarks')">
+              <i class="fas fa-download"></i> Export
+            </button>
+            <button class="btn btn-danger" onclick="deleteSelected('remarks')">
+              <i class="fas fa-trash"></i> Delete Selected
+            </button>
+            <button class="btn btn-primary" data-section="remarks">
+              <i class="fas fa-plus"></i> Add New
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Load existing script (adds Add button behavior, sorting, search) -->
+  <script src="script.js"></script>
+
+</body>
+</html>

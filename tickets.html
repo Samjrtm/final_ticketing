@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css" />
+    <title>Virmatics - Tickets</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+ <div id="navbar"></div>
+
+  <script>
+    fetch('navbar.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('navbar').innerHTML = data;
+      });
+  </script>
+
+
+    <div class="ticket-dashboard">
+        <div class="ticket-header">
+            <h1 class="ticket-title"><i class="fas fa-ticket-alt"></i> Tickets</h1>
+            <div class="ticket-controls">
+                <button class="btn btn-secondary" onclick="filterTickets()">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <button class="btn btn-secondary" onclick="refreshTickets()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button class="btn btn-secondary" onclick="exportTickets()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn btn-primary" id="createTicketBtn">
+                    <i class="fas fa-plus"></i> New Ticket
+                </button>
+            </div>
+        </div>
+
+        <div class="ticket-view-toggle">
+            <div class="view-option active" data-view="my"><i class="fas fa-user"></i> My Tickets</div>
+            <div class="view-option" data-view="all"><i class="fas fa-list"></i> All Tickets</div>
+            <div class="view-option" data-view="open"><i class="fas fa-folder-open"></i> Open</div>
+            <div class="view-option" data-view="closed"><i class="fas fa-check-circle"></i> Closed</div>
+        </div>
+
+        <div class="ticket-cards" id="ticket-cards">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading tickets...
+            </div>
+        </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        let allTickets = [];
+        let currentView = 'my';
+        
+        const createTicketBtn = document.getElementById('createTicketBtn');
+        if (createTicketBtn) {
+          createTicketBtn.addEventListener('click', () => {
+            window.location.href = 'ticketview.html';
+          });
+        }
+
+        const container = document.getElementById('ticket-cards');
+
+        function escapeHtml(str = '') {
+          return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        }
+
+        function priorityClass(p = '') {
+          const v = String(p).toLowerCase();
+          if (v.includes('high')) return 'priority-high';
+          if (v.includes('medium')) return 'priority-medium';
+          return 'priority-low';
+        }
+
+        function statusClass(s = '') {
+          const v = String(s).toLowerCase().replace(/\s+/g, '-');
+          return v;
+        }
+        function renderTicket(t, index) {
+          const pr = priorityClass(t.priority || '');
+          const status = statusClass(t.status || '');
+          const due = t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '—';
+          const created = t.createdAt ? new Date(t.createdAt).toLocaleDateString() : '—';
+          
+          return `
+            <div class="ticket-card ${pr}" data-ticket-id="${escapeHtml(t.id || '')}" onclick="viewTicket('${escapeHtml(t.id || '')}')">
+              <div class="ticket-card-header">
+                <span class="ticket-id">${escapeHtml(t.id || '')}</span>
+                <span class="ticket-priority ${pr}">${escapeHtml(t.priority || '')}</span>
+              </div>
+              <h3 class="ticket-title">${escapeHtml(t.title || '')}</h3>
+              <span class="ticket-status status-${status}">${escapeHtml(t.status || '')}</span>
+              <p class="ticket-description">${escapeHtml(t.description || '')}</p>
+              <div class="ticket-meta">
+                <div class="meta-item"><i class="fas fa-user"></i><span>${escapeHtml(t.assignedTo || 'Unassigned')}</span></div>
+                <div class="meta-item"><i class="fas fa-calendar"></i><span>Due: ${escapeHtml(due)}</span></div>
+                <div class="meta-item"><i class="fas fa-clock"></i><span>Created: ${escapeHtml(created)}</span></div>
+              </div>
+              <div class="ticket-footer">
+                <div class="ticket-actions">
+                  <button class="action-btn" title="View" onclick="event.stopPropagation(); viewTicket('${escapeHtml(t.id || '')}')">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="action-btn" title="Edit" onclick="event.stopPropagation(); editTicket('${escapeHtml(t.id || '')}')">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="action-btn" title="Delete" onclick="event.stopPropagation(); deleteTicket('${escapeHtml(t.id || '')}')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+                <div class="ticket-assignee">
+                  <div class="assignee-avatar">
+                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" alt="${escapeHtml(t.assignedTo || '')}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiNmM2Y0ZjYiLz4KPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTggOEE0IDQgMCAxIDAgOCAwYTQgNCAwIDAgMCAwIDhaTTggMTBjLTQuNDIgMC04IDMuNTgtOCA4aDEuNWMwLTMuNTggMi45Mi02LjUgNi41LTYuNXM2LjUgMi45MiA2LjUgNi41SDE2Yy0uMDEtNC40Mi0zLjU4LTgtOC04WiIgZmlsbD0iIzZiNzI4MCIvPgo8L3N2Zz4KPC9zdmc+'">
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        function filterTickets(view = currentView) {
+          currentView = view;
+          
+          // Update active view
+          document.querySelectorAll('.view-option').forEach(option => {
+            option.classList.remove('active');
+          });
+          document.querySelector(`[data-view="${view}"]`).classList.add('active');
+          
+          let filteredTickets = allTickets;
+          
+          switch(view) {
+            case 'my':
+              // For demo, show all tickets. In real app, filter by current user
+              break;
+            case 'open':
+              filteredTickets = allTickets.filter(t => 
+                ['Open', 'In Progress'].includes(t.status)
+              );
+              break;
+            case 'closed':
+              filteredTickets = allTickets.filter(t => 
+                ['Closed', 'Completed'].includes(t.status)
+              );
+              break;
+            case 'all':
+            default:
+              break;
+          }
+          
+          renderTickets(filteredTickets);
+        }
+        
+        function renderTickets(tickets) {
+          if (tickets.length === 0) {
+            container.innerHTML = `
+              <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #6b7280;">
+                <i class="fas fa-ticket-alt" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                <h3>No tickets found</h3>
+                <p>Create your first ticket to get started.</p>
+              </div>
+            `;
+            return;
+          }
+          
+          container.innerHTML = '';
+          tickets.forEach((t, index) => {
+            container.insertAdjacentHTML('beforeend', renderTicket(t, index));
+          });
+        }
+        async function fetchTickets() {
+          try {
+            console.log('Fetching tickets from /api/tickets...');
+            const res = await fetch('/api/tickets');
+            console.log('Response status:', res.status);
+            if (!res.ok) throw new Error('Failed to load tickets');
+            const data = await res.json();
+            console.log('Received tickets data:', data);
+            allTickets = Array.isArray(data) ? data : [];
+            filterTickets(currentView);
+          } catch (err) {
+            console.error('Error fetching tickets:', err);
+            container.innerHTML = `
+              <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #ef4444;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px;"></i>
+                <h3>Failed to load tickets</h3>
+                <p>Error: ${err.message}</p>
+              </div>
+            `;
+          }
+        }
+
+        // View toggle functionality
+        document.querySelectorAll('.view-option').forEach(option => {
+          option.addEventListener('click', () => {
+            filterTickets(option.dataset.view);
+          });
+        });
+        
+        // Global functions for ticket actions
+        window.viewTicket = function(ticketId) {
+          window.location.href = `ticketview.html?id=${ticketId}`;
+        };
+        
+        window.editTicket = function(ticketId) {
+          window.location.href = `ticketview.html?id=${ticketId}&edit=true`;
+        };
+        
+        window.deleteTicket = async function(ticketId) {
+          if (!confirm('Are you sure you want to delete this ticket?')) return;
+          
+          try {
+            const res = await fetch(`/api/tickets/${ticketId}`, {
+              method: 'DELETE'
+            });
+            
+            if (res.ok) {
+              allTickets = allTickets.filter(t => t.id !== ticketId);
+              filterTickets(currentView);
+              showNotification('Ticket deleted successfully', 'success');
+            } else {
+              throw new Error('Failed to delete ticket');
+            }
+          } catch (err) {
+            console.error('Error deleting ticket:', err);
+            showNotification('Failed to delete ticket', 'error');
+          }
+        };
+        
+        window.exportTickets = function() {
+          const csv = [
+            ['ID', 'Title', 'Status', 'Priority', 'Assigned To', 'Created By', 'Due Date', 'Created At'].join(','),
+            ...allTickets.map(t => [
+              t.id || '',
+              `"${(t.title || '').replace(/"/g, '""')}"`,
+              t.status || '',
+              t.priority || '',
+              t.assignedTo || '',
+              t.createdBy || '',
+              t.dueDate || '',
+              t.createdAt || ''
+            ].join(','))
+          ].join('\n');
+          
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `tickets_${new Date().toISOString().slice(0, 10)}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+          
+          showNotification('Tickets exported successfully', 'success');
+        };
+        
+        window.filterTickets = function() {
+          // Simple filter implementation - in real app, this would show a filter modal
+          const priority = prompt('Filter by priority (high/medium/low) or leave empty for all:');
+          if (priority === null) return;
+          
+          let filtered = allTickets;
+          if (priority.trim()) {
+            filtered = allTickets.filter(t => 
+              (t.priority || '').toLowerCase().includes(priority.toLowerCase())
+            );
+          }
+          
+          renderTickets(filtered);
+        };
+        
+        // Notification function
+        function showNotification(message, type = 'info') {
+          const notification = document.createElement('div');
+          notification.className = `notification notification-${type}`;
+          notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+            <button class="notification-close">&times;</button>
+          `;
+          
+          notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 400px;
+            animation: slideIn 0.3s ease;
+          `;
+          
+          document.body.appendChild(notification);
+          
+          setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+          }, 5000);
+          
+          notification.querySelector('.notification-close').onclick = () => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+          };
+        }
+        fetchTickets();
+      });
+    </script>
+</body>
+</html>
