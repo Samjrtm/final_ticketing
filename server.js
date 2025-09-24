@@ -25,7 +25,7 @@ async function initDB() {
     db = await mysql.createPool({
       host: "localhost",
       user: "root",
-      password: "**********",
+      password: "Virmatics@123",
       database: "virmatics",
       waitForConnections: true,
       connectionLimit: 10,
