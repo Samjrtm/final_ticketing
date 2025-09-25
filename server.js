@@ -323,6 +323,35 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "login.html"));
 });
 
+// Serve static HTML files
+app.get("/login.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "login.html"));
+});
+
+app.get("/dashboard.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "dashboard.html"));
+});
+
+app.get("/tickets.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "tickets.html"));
+});
+
+app.get("/ticketview.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "ticketview.html"));
+});
+
+app.get("/timeline.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "timeline.html"));
+});
+
+app.get("/settings.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "settings.html"));
+});
+
+app.get("/navbar.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "navbar.html"));
+});
 app.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port}`);
+  console.log(`📱 Open http://localhost:${port} to access the login page`);
 });
