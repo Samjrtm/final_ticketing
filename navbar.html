@@ -29,6 +29,15 @@
 
       <!-- Navigation Icons -->
       <nav class="site-navigation">
+        <!-- User Info (shown when logged in) -->
+        <div class="user-info" id="userInfo" style="display: none;">
+          <div class="user-avatar" id="userAvatar"></div>
+          <span id="userName"></span>
+          <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+        
         <ul class="nav">
           <li>
             <a href="dashboard.html" title="Dashboard" data-page="dashboard">
@@ -58,6 +67,9 @@
   <script>
     // Set active navigation item based on current page
     document.addEventListener('DOMContentLoaded', function() {
+      // Check authentication
+      checkAuthentication();
+      
       const currentPage = window.location.pathname.split('/').pop().replace('.html', '') || 'dashboard';
       const navLinks = document.querySelectorAll('.nav a[data-page]');
       
@@ -69,6 +81,43 @@
         }
       });
     });
+    
+    // Authentication check
+    function checkAuthentication() {
+      const currentUser = localStorage.getItem('currentUser');
+      const currentPage = window.location.pathname.split('/').pop();
+      
+      if (!currentUser && currentPage !== 'login.html') {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      if (currentUser) {
+        const userData = JSON.parse(currentUser);
+        displayUserInfo(userData);
+      }
+    }
+    
+    // Display user info in navbar
+    function displayUserInfo(userData) {
+      const userInfo = document.getElementById('userInfo');
+      const userAvatar = document.getElementById('userAvatar');
+      const userName = document.getElementById('userName');
+      
+      if (userInfo && userAvatar && userName) {
+        userInfo.style.display = 'flex';
+        userAvatar.textContent = userData.fullName.charAt(0).toUpperCase();
+        userName.textContent = userData.fullName;
+      }
+    }
+    
+    // Logout function
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+      }
+    }
     
     // Global search functionality
     function performGlobalSearch() {

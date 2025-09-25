@@ -320,7 +320,7 @@ app.delete("/api/tickets/:id", async (req, res) => {
 });
 // ========== HOMEPAGE ==========
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "dashboard.html"));
+  res.sendFile(path.join(__dirname, "login.html"));
 });
 
 app.listen(port, () => {
